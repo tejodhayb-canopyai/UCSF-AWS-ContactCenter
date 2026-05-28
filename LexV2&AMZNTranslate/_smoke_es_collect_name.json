@@ -1,0 +1,52 @@
+{
+  "messageVersion": "1.0",
+  "invocationSource": "FulfillmentCodeHook",
+  "inputMode": "Speech",
+  "responseContentType": "text/plain; charset=utf-8",
+  "sessionId": "smoke-test-es-name-001",
+  "inputTranscript": "Me llamo Tejodhay",
+  "bot": {
+    "id": "4XWU77TLEP",
+    "name": "GIHealthcareBot_test",
+    "aliasId": "TSTALIASID",
+    "aliasName": "TestBotAlias",
+    "localeId": "es_US",
+    "version": "DRAFT"
+  },
+  "interpretations": [
+    {
+      "intent": {
+        "name": "CollectNameIntent",
+        "slots": {
+          "patientName": {
+            "value": {
+              "originalValue": "Tejodhay",
+              "interpretedValue": "Tejodhay"
+            }
+          }
+        },
+        "state": "ReadyForFulfillment"
+      },
+      "nluConfidence": 0.95
+    }
+  ],
+  "sessionState": {
+    "sessionAttributes": {
+      "langCode": "es",
+      "collectionMode": "name"
+    },
+    "intent": {
+      "name": "CollectNameIntent",
+      "slots": {
+        "patientName": {
+          "value": {
+            "originalValue": "Tejodhay",
+            "interpretedValue": "Tejodhay"
+          }
+        }
+      },
+      "state": "ReadyForFulfillment"
+    },
+    "originatingRequestId": "req-es-name-001"
+  }
+}

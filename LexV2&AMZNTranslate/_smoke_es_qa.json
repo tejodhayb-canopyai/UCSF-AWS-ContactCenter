@@ -1,0 +1,43 @@
+{
+  "messageVersion": "1.0",
+  "invocationSource": "FulfillmentCodeHook",
+  "inputMode": "Speech",
+  "responseContentType": "text/plain; charset=utf-8",
+  "sessionId": "smoke-test-es-001",
+  "inputTranscript": "¿Cuándo debo empezar a beber la solución de preparación?",
+  "bot": {
+    "id": "4XWU77TLEP",
+    "name": "GIHealthcareBot_test",
+    "aliasId": "TSTALIASID",
+    "aliasName": "TestBotAlias",
+    "localeId": "es_US",
+    "version": "DRAFT"
+  },
+  "interpretations": [
+    {
+      "intent": {
+        "name": "PrepQuestionIntent",
+        "slots": {},
+        "state": "ReadyForFulfillment",
+        "confirmationState": "None"
+      },
+      "nluConfidence": 1.0
+    }
+  ],
+  "sessionState": {
+    "sessionAttributes": {
+      "langCode": "es",
+      "callerPhone": "+15555550101",
+      "patientName": "María",
+      "procedureDate": "2026-05-22",
+      "procedureTime": "09:00"
+    },
+    "intent": {
+      "name": "PrepQuestionIntent",
+      "slots": {},
+      "state": "ReadyForFulfillment",
+      "confirmationState": "None"
+    },
+    "originatingRequestId": "req-es-001"
+  }
+}

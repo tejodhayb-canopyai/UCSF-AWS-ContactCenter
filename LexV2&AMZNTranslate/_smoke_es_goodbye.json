@@ -1,0 +1,37 @@
+{
+  "messageVersion": "1.0",
+  "invocationSource": "FulfillmentCodeHook",
+  "inputMode": "Speech",
+  "responseContentType": "text/plain; charset=utf-8",
+  "sessionId": "smoke-test-es-goodbye-001",
+  "inputTranscript": "Adiós, muchas gracias",
+  "bot": {
+    "id": "4XWU77TLEP",
+    "name": "GIHealthcareBot_test",
+    "aliasId": "TSTALIASID",
+    "aliasName": "TestBotAlias",
+    "localeId": "es_US",
+    "version": "DRAFT"
+  },
+  "interpretations": [
+    {
+      "intent": {
+        "name": "PrepQuestionIntent",
+        "slots": {},
+        "state": "ReadyForFulfillment"
+      },
+      "nluConfidence": 0.5
+    }
+  ],
+  "sessionState": {
+    "sessionAttributes": {
+      "langCode": "es"
+    },
+    "intent": {
+      "name": "PrepQuestionIntent",
+      "slots": {},
+      "state": "ReadyForFulfillment"
+    },
+    "originatingRequestId": "req-es-bye-001"
+  }
+}

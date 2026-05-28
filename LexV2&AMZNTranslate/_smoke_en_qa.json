@@ -1,0 +1,43 @@
+{
+  "messageVersion": "1.0",
+  "invocationSource": "FulfillmentCodeHook",
+  "inputMode": "Speech",
+  "responseContentType": "text/plain; charset=utf-8",
+  "sessionId": "smoke-test-en-001",
+  "inputTranscript": "When should I start drinking my prep solution?",
+  "bot": {
+    "id": "4XWU77TLEP",
+    "name": "GIHealthcareBot_test",
+    "aliasId": "TSTALIASID",
+    "aliasName": "TestBotAlias",
+    "localeId": "en_US",
+    "version": "DRAFT"
+  },
+  "interpretations": [
+    {
+      "intent": {
+        "name": "PrepQuestionIntent",
+        "slots": {},
+        "state": "ReadyForFulfillment",
+        "confirmationState": "None"
+      },
+      "nluConfidence": 1.0
+    }
+  ],
+  "sessionState": {
+    "sessionAttributes": {
+      "langCode": "en",
+      "callerPhone": "+15555550100",
+      "patientName": "John",
+      "procedureDate": "2026-05-22",
+      "procedureTime": "09:00"
+    },
+    "intent": {
+      "name": "PrepQuestionIntent",
+      "slots": {},
+      "state": "ReadyForFulfillment",
+      "confirmationState": "None"
+    },
+    "originatingRequestId": "req-en-001"
+  }
+}
