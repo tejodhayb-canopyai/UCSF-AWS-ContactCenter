@@ -1,0 +1,10 @@
+{
+  "messageVersion": "1.0",
+  "invocationSource": "FulfillmentCodeHook",
+  "inputTranscript": "I have chest pain",
+  "sessionId": "smoke-test-escalation-1",
+  "sessionState": {
+    "sessionAttributes": {"langCode": "en", "callerPhone": "+14155550199"},
+    "intent": {"name": "PrepQuestionIntent", "slots": {}}
+  }
+}

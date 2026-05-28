@@ -1,0 +1,20 @@
+# Keep the build context small and reproducible. The container only
+# needs lambda_function.py + agentic/ + skills/*.md + requirements.txt.
+
+.venv/
+.pytest_cache/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+tests/
+README.md
+
+.git/
+.gitignore
+.dockerignore
+
+# Sample / dev-only artefacts that occasionally end up here
+*.log
+*.tmp
+sample-event*.json

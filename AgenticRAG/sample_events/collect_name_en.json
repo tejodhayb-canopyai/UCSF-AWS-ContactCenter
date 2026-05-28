@@ -1,0 +1,10 @@
+{
+  "messageVersion": "1.0",
+  "invocationSource": "FulfillmentCodeHook",
+  "inputTranscript": "my name is Tejodhay",
+  "sessionId": "smoke-test-name-en-1",
+  "sessionState": {
+    "sessionAttributes": {"langCode": "en"},
+    "intent": {"name": "CollectNameIntent", "slots": {}}
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "messageVersion": "1.0",
+  "invocationSource": "FulfillmentCodeHook",
+  "inputTranscript": "Tejodhay",
+  "sessionId": "smoke-test-fallback-name-1",
+  "sessionState": {
+    "sessionAttributes": {"langCode": "en", "collectionMode": "name"},
+    "intent": {"name": "FallbackIntent", "slots": {}}
+  }
+}

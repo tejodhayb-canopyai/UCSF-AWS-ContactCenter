@@ -1,0 +1,11 @@
+# Application dependencies for the Agentic-RAG Lambda (container image).
+# Pinned to exact versions for reproducible builds; bump deliberately.
+
+langgraph==1.2.1
+python-frontmatter==1.1.0
+pyyaml==6.0.2
+
+# Transitive deps (langgraph -> langchain-core -> pydantic, etc.) resolve
+# automatically. boto3 is provided by the AWS Lambda base image; do not pin
+# it here -- using the runtime-provided version avoids version drift with the
+# Lambda environment.

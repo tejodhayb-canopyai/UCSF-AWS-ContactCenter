@@ -1,0 +1,35 @@
+{
+    "botAliasId": "TSTALIASID",
+    "botAliasName": "TestBotAlias",
+    "botVersion": "DRAFT",
+    "botAliasLocaleSettings": {
+        "en_US": {
+            "enabled": true,
+            "codeHookSpecification": {
+                "lambdaCodeHook": {
+                    "lambdaARN": "arn:aws:lambda:us-east-1:642058032951:function:GIHealthcareLexFulfillment",
+                    "codeHookInterfaceVersion": "1.0"
+                }
+            }
+        },
+        "es_US": {
+            "enabled": true,
+            "codeHookSpecification": {
+                "lambdaCodeHook": {
+                    "lambdaARN": "arn:aws:lambda:us-east-1:642058032951:function:GIHealthcareLexFulfillment",
+                    "codeHookInterfaceVersion": "1.0"
+                }
+            }
+        }
+    },
+    "botAliasHistoryEvents": [
+        {
+            "botVersion": "DRAFT",
+            "startDate": "2026-05-14T03:46:59.745000-05:00"
+        }
+    ],
+    "botAliasStatus": "Available",
+    "botId": "CSMSY7YKWE",
+    "creationDateTime": "2026-05-14T03:46:59.685000-05:00",
+    "lastUpdatedDateTime": "2026-05-19T21:38:13.972000-05:00"
+}

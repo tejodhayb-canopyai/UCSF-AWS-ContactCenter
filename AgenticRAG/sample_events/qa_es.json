@@ -1,0 +1,10 @@
+{
+  "messageVersion": "1.0",
+  "invocationSource": "FulfillmentCodeHook",
+  "inputTranscript": "cuando debo empezar a tomar la preparacion",
+  "sessionId": "smoke-test-qa-es-1",
+  "sessionState": {
+    "sessionAttributes": {"langCode": "es", "callerPhone": "+14155550199"},
+    "intent": {"name": "PrepQuestionIntent", "slots": {}}
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "messageVersion": "1.0",
+  "invocationSource": "FulfillmentCodeHook",
+  "inputTranscript": "when should I start drinking the prep",
+  "sessionId": "smoke-test-qa-en-1",
+  "sessionState": {
+    "sessionAttributes": {"langCode": "en", "callerPhone": "+14155550199"},
+    "intent": {"name": "PrepQuestionIntent", "slots": {}}
+  }
+}

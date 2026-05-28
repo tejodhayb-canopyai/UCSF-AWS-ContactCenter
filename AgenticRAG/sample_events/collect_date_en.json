@@ -1,0 +1,10 @@
+{
+  "messageVersion": "1.0",
+  "invocationSource": "FulfillmentCodeHook",
+  "inputTranscript": "May twenty second",
+  "sessionId": "smoke-test-date-en-1",
+  "sessionState": {
+    "sessionAttributes": {"langCode": "en"},
+    "intent": {"name": "CollectDateIntent", "slots": {}}
+  }
+}
