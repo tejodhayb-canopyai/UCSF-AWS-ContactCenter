@@ -23,9 +23,3 @@ implementation depth:
 - [`AgenticRAG/README.md`](./AgenticRAG/README.md) — production stack, graph topology, runbooks
 - [`Lex/README.md`](./Lex/README.md) — v1 architecture, prompt design, PHI policy
 - [`LexV2&AMZNTranslate/README.md`](./LexV2%26AMZNTranslate/README.md) — v2 design and why it was rejected
-
-> **Connect contact-flow snapshots are not in this repo.** AWS Connect
-> does not version contact flows, so the maintainer keeps timestamped
-> JSON snapshots of `GI_Inbound_Main` (and the matching one-paste
-> rollback scripts) on the local maintenance machine, outside the
-> workspace. **Always snapshot the flow before any change to the IVR.**

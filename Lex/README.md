@@ -453,7 +453,7 @@ After the third capture, `GI_Confirm_Route` reads `langCode` and routes to eithe
 | `3` | `GI_Mark_Reentry_4` | `4` | `GI_Collect_Name` |
 | `4` | `GI_Reentry_Max` plays `$.Attributes.reentryMaxMsg` ("Okay, let's proceed with the information we have." / "Esta bien, continuemos con la informacion que tenemos.") | unchanged | `GI_Inbound_Main` |
 
-That gives the caller up to four re-entry attempts (5 total passes through name/date/time) before the flow auto-proceeds. The cap prevents a stubborn ASR mismatch from trapping the caller in an infinite confirm-loop. The trailing "Go ahead." prompt is left to `GI_Inbound_Main` so `reentryMaxMsg` deliberately does NOT include it (avoids double-speaking). As of 2026-05-24, that "Go ahead." is spoken **only on the first Q&A turn** — `GI_Reset_Fallback` clears `goAheadMsg` after each successful `PrepQuestionIntent` so subsequent turns rely on the bot's own follow-up prompt ("What else can I help with?") to invite the next question. See [Connect flow change log](#connect-flow-change-log) for the deploy / rollback procedure.
+That gives the caller up to four re-entry attempts (5 total passes through name/date/time) before the flow auto-proceeds. The cap prevents a stubborn ASR mismatch from trapping the caller in an infinite confirm-loop. The trailing "Go ahead." prompt is left to `GI_Inbound_Main` so `reentryMaxMsg` deliberately does NOT include it (avoids double-speaking). The "Go ahead." prompt is spoken **only on the first Q&A turn** — `GI_Reset_Fallback` clears `goAheadMsg` after each successful `PrepQuestionIntent` so subsequent turns rely on the bot's own follow-up prompt ("What else can I help with?") to invite the next question.
 
 Skipped fields show as `"not provided"` / `"no proporcionado"` in the playback (seeded as defaults in `GI_Set_Attrs_{EN,ES}`), which keeps the confirmation grammatical without conditional message blocks.
 
@@ -505,90 +505,6 @@ UCSF-AWS-ContactCenter/
     ├── flow_active.json               # last-known-good Connect flow content
     └── ...
 ```
-
-Connect contact-flow snapshots (timestamped JSON of `GI_Inbound_Main`
-plus one-paste rollback PowerShell scripts) are **not in this repo**;
-AWS Connect does not version contact flows, so the maintainer keeps
-them on the local maintenance machine outside the workspace
-(currently at
-`f:\UCSF-AWS-ContactCenter-local-only\_connect_flow_snapshots\`).
-Snapshots are created before any flow change so the previous
-behavior can be restored with one paste — see
-[Connect flow change log](#connect-flow-change-log).
-
----
-
-## Connect flow change log
-
-Every modification to the production contact flow `GI_Inbound_Main`
-(id `49fa7a14-1ef7-456d-b0ee-32738a62a1be`) is captured here with
-its motivation, the exact server-side change, and a one-paste
-rollback. The change is applied via
-`aws connect update-contact-flow-content` and takes effect for the
-NEXT inbound contact (calls already in progress finish on the
-version they started with).
-
-### 2026-05-24 — "Go ahead." spoken only on first Q&A turn
-
-**Why**: Every non-terminal bot answer already ends with the
-follow-up prompt from the agentic Lambda's skill files ("What else
-can I help with?" / "¿En qué más puedo ayudarte?"). Speaking the
-contact-attribute prompt "Go ahead." / "Adelante." immediately
-after that was redundant and made the bot feel scripted. The first
-Q&A turn still needs the cue because the caller is transitioning
-from DTMF (press 1 to confirm) to free-form voice.
-
-**What changed (server-side)**: One key added to
-`GI_Reset_Fallback.Parameters.Attributes`:
-
-```diff
- "GI_Reset_Fallback": {
-   "Type": "UpdateContactAttributes",
-   "Parameters": {
-     "Attributes": {
--      "fallbackCount": "0"
-+      "fallbackCount": "0",
-+      "goAheadMsg": " "
-     }
-   }
- }
-```
-
-A single space is used instead of an empty string because Connect's
-`UpdateContactAttributes` validator rejects empty string values
-(`InvalidContactFlowException`); a space is non-empty and Polly
-speaks essentially nothing for it.
-
-**Behavior delta**:
-
-| Phase | Before | After |
-| --- | --- | --- |
-| First Q&A turn (right after "press 1 to confirm") | "Go ahead." spoken | "Go ahead." spoken (unchanged) |
-| Q&A turn 2, 3, …, n (after a successful answer) | "Go ahead." spoken again | Silence (single-space attribute); bot's follow-up prompt invites the question |
-| Fallback turn (FallbackIntent) | `fallbackMsg_1` / `fallbackMsg_2` then "Go ahead." | `fallbackMsg_1` / `fallbackMsg_2` then "Go ahead." (unchanged — `GI_Reset_Fallback` is not on the fallback path) |
-| Default retry (input timeout) | `defaultRetryMsg` then "Go ahead." | `defaultRetryMsg` then either "Go ahead." (if first turn) or silence (if `GI_Reset_Fallback` already ran) |
-
-**Snapshot artifacts** (kept for rollback, on the maintenance machine
-under `f:\UCSF-AWS-ContactCenter-local-only\_connect_flow_snapshots\`,
-not in this repo):
-
-- `GI_Inbound_Main_full_20260524-204748.json` — full `describe-contact-flow` response (audit)
-- `GI_Inbound_Main_content_20260524-204748.json` — raw content (with trailing CRLF)
-- `GI_Inbound_Main_original_notrail_20260524-204748.json` — raw content without trailing newline (used by `ROLLBACK_GoAhead.ps1`)
-- `GI_Inbound_Main_pretty_20260524-204748.json` — pretty-printed for human review
-- `GI_Inbound_Main_modified_v2_20260524-204748.json` — the new content as deployed
-
-**Rollback (one paste)**:
-
-```powershell
-cd f:\UCSF-AWS-ContactCenter-local-only\_connect_flow_snapshots
-.\ROLLBACK_GoAhead.ps1
-```
-
-The script re-uploads the pre-change snapshot via
-`update-contact-flow-content` and verifies that `goAheadMsg` is no
-longer present on `GI_Reset_Fallback`. Takes ~10 seconds; next
-caller picks up the restored behavior.
 
 ---
 
