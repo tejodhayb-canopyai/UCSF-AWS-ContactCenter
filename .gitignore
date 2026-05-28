@@ -1,0 +1,40 @@
+# --- Python virtualenvs / build artefacts ----------------------------------
+.venv/
+venv/
+env/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- Node / generic editor / OS junk ---------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- Lambda / Docker deployment artefacts (rebuildable, big) ---------------
+# These three were 47 MB combined at the workspace root; rebuilt by the
+# Dockerfile / zip flow documented in AgenticRAG/README.md.
+*.zip
+out.json
+*.tar
+*.tar.gz
+
+# --- Local AWS / CI scratch files ------------------------------------------
+.aws/
+.env
+.env.*
+*.local
+
+# --- Generated / scratch JSON the runbooks create temporarily --------------
+_tmp_*.json
