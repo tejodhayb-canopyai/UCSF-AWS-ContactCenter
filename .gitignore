@@ -38,3 +38,9 @@ out.json
 
 # --- Generated / scratch JSON the runbooks create temporarily --------------
 _tmp_*.json
+
+# --- Connect contact-flow snapshots (kept locally, never pushed) -----------
+# AWS Connect does not version contact flows, so snapshots taken before any
+# GI_Inbound_Main change live on the maintainer's machine outside this repo
+# (see f:\UCSF-AWS-ContactCenter-local-only\_connect_flow_snapshots).
+_connect_flow_snapshots/

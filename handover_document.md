@@ -104,10 +104,14 @@ UCSF-AWS-ContactCenter/
 │   ├── Dockerfile + requirements.txt
 │   ├── ROLLBACK.ps1                 ← one-paste rollback to v1
 │   └── README.md                    ← deep-dive: build phases, graph topology, runbooks
-├── _connect_flow_snapshots/         ← timestamped JSON snapshots of GI_Inbound_Main
-│   ├── *.json                       ← pre-change content + pretty-printed copies
-│   └── ROLLBACK_GoAhead.ps1         ← one-paste rollback for the "Go ahead" flow change
-└── *.zip                            ← deployment artifacts (gitignored in spirit)
+└── *.zip                            ← deployment artifacts (gitignored)
+
+# Not in this repo (kept on the maintenance machine only):
+#   _connect_flow_snapshots/         ← timestamped JSON snapshots of
+#                                      GI_Inbound_Main + one-paste rollback
+#                                      scripts. AWS Connect has no built-in
+#                                      versioning, so snapshot before any
+#                                      flow change.
 ```
 
 Each subfolder has its own README with the full technical depth. **This
@@ -741,13 +745,19 @@ without rebuilding.
 
 ### Roll back a Connect flow change
 
-Every change to `GI_Inbound_Main` is preceded by a timestamped JSON
-snapshot in `_connect_flow_snapshots/`. The 2026-05-24 "Go ahead"
-prompt change has a one-paste restore:
+AWS Connect does not version contact flows, so every change to
+`GI_Inbound_Main` is preceded by a timestamped JSON snapshot kept
+**outside this repo on the maintenance machine** (currently at
+`f:\UCSF-AWS-ContactCenter-local-only\_connect_flow_snapshots\`).
+Each snapshot ships with a companion one-paste PowerShell script
+that re-uploads the pre-change content via
+`aws connect update-contact-flow-content`.
+
+For the 2026-05-24 "Go ahead" prompt change:
 
 ```powershell
-cd f:\UCSF-AWS-ContactCenter
-.\_connect_flow_snapshots\ROLLBACK_GoAhead.ps1
+cd f:\UCSF-AWS-ContactCenter-local-only\_connect_flow_snapshots
+.\ROLLBACK_GoAhead.ps1
 ```
 
 ### Run the test suite locally
@@ -771,14 +781,14 @@ breaks parity is caught before deployment.
 
 | Symptom (what the caller / operator sees) | Most likely cause | Where to look first | Fix |
 | --- | --- | --- | --- |
-| Caller dials, hears nothing after greeting | Connect flow stuck (block failure, missing attribute, Lex alias misconfigured) | Connect → **Contact Search** → open the contact → **Contact flow events** | Identify the block that errored; check its referenced attributes/intents exist. Check `_connect_flow_snapshots/` for the last-known-good content. |
+| Caller dials, hears nothing after greeting | Connect flow stuck (block failure, missing attribute, Lex alias misconfigured) | Connect → **Contact Search** → open the contact → **Contact flow events** | Identify the block that errored; check its referenced attributes/intents exist. Check the maintainer's local `_connect_flow_snapshots/` folder for the last-known-good content. |
 | Caller hears "I'm sorry, I couldn't reach our knowledge service" | Bedrock call failed (KB sync issue, model throttling, network) | CloudWatch `/aws/lambda/GIHealthcareLexFulfillment_agentic`, search for `ERROR` or `kb_search_error` | Check the Bedrock KB status in console (data source sync, embedding model availability). Retry after the underlying issue clears. The Lambda has a try/except so the call doesn't drop — caller hears the canned message and can keep talking. |
 | Caller hears "I couldn't find a clear answer in our materials" | Grounding gate refused (top retrieval score < 0.35) | Lambda logs — look for `top_score=` line | Either the KB doesn't contain the answer (expected fallback) or the question was ASR-mangled. Cross-check with the audit row in DynamoDB. To loosen the gate, lower the `RETRIEVAL_MIN_SCORE` env var (currently `0.35`); raise it to be stricter. |
 | Spanish caller is getting English answers | `langCode` session attribute not set before Lex is invoked | Lambda logs for that turn — look for `lang_code=` (expect `es`). If missing, the Connect flow's `GI_Set_Attrs_ES` block didn't fire or fired after the Lex bot block | Verify the flow path in Contact Search → flow events. The Lambda defaults to English when `langCode` is missing — by design, so a misconfigured flow never strands the caller silent. |
 | Caller asks "what's my procedure time?" and bot doesn't know | Patient-info session attributes aren't being forwarded to the Lambda, or `_extract_caller_info` is rejecting them as the "not provided" placeholder | Lambda logs for that turn — look for the `caller_info=` log line | If the slot was skipped, the bot intentionally has nothing to say. If the slot was captured, check the Save block (`GI_Save_Name` / `GI_Save_Date` / `GI_Save_Time`) is writing to the right contact attribute and that the Connect → Lex block forwards it as a session attribute. |
 | Lambda timing out (Lex sees `LambdaTimeout`) | Cold start of the container Lambda, OR a hung Bedrock call | CloudWatch Lambda metrics → **Duration** + **Throttles**. Logs will show `Init duration` separately for cold starts | Cold starts are ~7.5 s — within the 30 s Lambda timeout but visible to the caller as a few seconds of silence. Mitigation: enable provisioned concurrency. Bedrock hangs: check Bedrock service health, model availability in `us-east-1`. |
 | Bot misclassifies a question as `FallbackIntent` | Sample utterances are too narrow OR ASR mangled the utterance OR Assisted NLU disabled | Lex console → **Conversation logs** for the bot. Audit row in DDB shows `intentName=FallbackIntent`, `userText` shows what Lex transcribed | Add more sample utterances to `PrepQuestionIntent` and rebuild the locale. Confirm Assisted NLU is `enabled=true` in Fallback mode on both locales. |
-| `aws connect update-contact-flow-content` rejects with `InvalidContactFlowException` | Often: empty-string attribute value, OR JSON re-serialization changed key order / encoding | The CLI error message points at a block id | (1) Never set an attribute to `""` — use a single space `" "` instead. (2) Don't round-trip the JSON through `ConvertTo-Json` / `ConvertFrom-Json` — Connect's validator is sensitive to key ordering. Edit the raw JSON string surgically (string replace) and re-upload. The `_connect_flow_snapshots/GoAheadMsg_NoMore.ps1` script demonstrates this pattern. |
+| `aws connect update-contact-flow-content` rejects with `InvalidContactFlowException` | Often: empty-string attribute value, OR JSON re-serialization changed key order / encoding | The CLI error message points at a block id | (1) Never set an attribute to `""` — use a single space `" "` instead. (2) Don't round-trip the JSON through `ConvertTo-Json` / `ConvertFrom-Json` — Connect's validator is sensitive to key ordering. Edit the raw JSON string surgically (string replace) and re-upload. The `ROLLBACK_GoAhead.ps1` script in the maintainer's local snapshots folder demonstrates this pattern. |
 | Container build fails with "image manifest media type ... is not supported" | Newer Docker buildx adds OCI provenance/SBOM attestations that Lambda rejects | The `docker buildx build` output | Add `--provenance=false --sbom=false` to the `buildx` command. The redeploy runbook above already includes these flags. |
 | Parity tests fail after a code change | Behavior drift between v1 and v3 introduced by the change | `pytest tests/test_parity_with_prod.py -v` shows which of the 22 scenarios diverged | The failing test prints the expected (v1) vs actual (v3) Lex response. Reconcile until they match. If the v1 behavior is wrong and you intend to drop it, update the parity test fixture to the new expected value AND document the change here. |
 | Audit row missing for a turn | Either the turn was a collection / name-dialog / fallback-close branch (these don't write audit rows by design), or DynamoDB write failed | Lambda logs — `audit_log_node` logs a confirmation. Failure is swallowed (logging never breaks a call), so look for warning-level messages | If the turn should have been logged (any Q&A branch including escalation / empty-input), check the Lambda role's `dynamodb:PutItem` permission on `GIConversationTurns`. |
@@ -824,7 +834,7 @@ Pointers from "I want to do X" to the file you reach for:
 | Change the Bedrock model | Lambda env var `MODEL_ID` on `GIHealthcareLexFulfillment_agentic` |
 | Add a new escalation keyword | `AgenticRAG/skills/<lang>.md` frontmatter `escalation_keywords` |
 | Add a new branch in the conversation flow | New node in `AgenticRAG/agentic/nodes/`, wire it into `AgenticRAG/agentic/graph.py` |
-| Change the IVR (greeting, language gate, collection prompts) | AWS Connect console → flows → `GI_Inbound_Main`. Snapshot first; rollback artifacts go to `_connect_flow_snapshots/` |
+| Change the IVR (greeting, language gate, collection prompts) | AWS Connect console → flows → `GI_Inbound_Main`. Snapshot first (the snapshot + rollback script lives outside the repo on the maintenance machine). |
 | Change the audit log schema | `AgenticRAG/agentic/audit.py` + DynamoDB table schema |
 | Change what gets redacted in CloudWatch | `AgenticRAG/agentic/text.py` (`redact_name`) and audit log call sites |
 | Rebuild the Lambda container | `AgenticRAG/README.md` → **Rebuild / redeploy runbook** |

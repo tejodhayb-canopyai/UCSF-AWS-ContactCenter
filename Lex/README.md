@@ -506,11 +506,15 @@ UCSF-AWS-ContactCenter/
     └── ...
 ```
 
-The repo also has a `_connect_flow_snapshots/` folder containing
-timestamped JSON snapshots of `GI_Inbound_Main` (full describe +
-content-only) plus the rollback PowerShell scripts. Snapshots are
-created before any flow change so the previous behavior can be
-restored with one paste — see [Connect flow change log](#connect-flow-change-log).
+Connect contact-flow snapshots (timestamped JSON of `GI_Inbound_Main`
+plus one-paste rollback PowerShell scripts) are **not in this repo**;
+AWS Connect does not version contact flows, so the maintainer keeps
+them on the local maintenance machine outside the workspace
+(currently at
+`f:\UCSF-AWS-ContactCenter-local-only\_connect_flow_snapshots\`).
+Snapshots are created before any flow change so the previous
+behavior can be restored with one paste — see
+[Connect flow change log](#connect-flow-change-log).
 
 ---
 
@@ -564,19 +568,21 @@ speaks essentially nothing for it.
 | Fallback turn (FallbackIntent) | `fallbackMsg_1` / `fallbackMsg_2` then "Go ahead." | `fallbackMsg_1` / `fallbackMsg_2` then "Go ahead." (unchanged — `GI_Reset_Fallback` is not on the fallback path) |
 | Default retry (input timeout) | `defaultRetryMsg` then "Go ahead." | `defaultRetryMsg` then either "Go ahead." (if first turn) or silence (if `GI_Reset_Fallback` already ran) |
 
-**Snapshot artifacts** (kept for rollback):
+**Snapshot artifacts** (kept for rollback, on the maintenance machine
+under `f:\UCSF-AWS-ContactCenter-local-only\_connect_flow_snapshots\`,
+not in this repo):
 
-- `_connect_flow_snapshots/GI_Inbound_Main_full_20260524-204748.json` — full `describe-contact-flow` response (audit)
-- `_connect_flow_snapshots/GI_Inbound_Main_content_20260524-204748.json` — raw content (with trailing CRLF)
-- `_connect_flow_snapshots/GI_Inbound_Main_original_notrail_20260524-204748.json` — raw content without trailing newline (this is the file used by ROLLBACK_GoAhead.ps1)
-- `_connect_flow_snapshots/GI_Inbound_Main_pretty_20260524-204748.json` — pretty-printed for human review
-- `_connect_flow_snapshots/GI_Inbound_Main_modified_v2_20260524-204748.json` — the new content as deployed
+- `GI_Inbound_Main_full_20260524-204748.json` — full `describe-contact-flow` response (audit)
+- `GI_Inbound_Main_content_20260524-204748.json` — raw content (with trailing CRLF)
+- `GI_Inbound_Main_original_notrail_20260524-204748.json` — raw content without trailing newline (used by `ROLLBACK_GoAhead.ps1`)
+- `GI_Inbound_Main_pretty_20260524-204748.json` — pretty-printed for human review
+- `GI_Inbound_Main_modified_v2_20260524-204748.json` — the new content as deployed
 
 **Rollback (one paste)**:
 
 ```powershell
-cd f:\UCSF-AWS-ContactCenter
-.\_connect_flow_snapshots\ROLLBACK_GoAhead.ps1
+cd f:\UCSF-AWS-ContactCenter-local-only\_connect_flow_snapshots
+.\ROLLBACK_GoAhead.ps1
 ```
 
 The script re-uploads the pre-change snapshot via
