@@ -749,6 +749,55 @@ runs both on 22 representative event payloads, and asserts byte-for-byte
 identical Lex responses. This is the regression gate — any change that
 breaks parity is caught before deployment.
 
+### Admin portal — document syncing
+
+A separate Admin Portal UI (built by the team) lets non-engineering
+users upload UCSF prep documents that flow directly into the Knowledge
+Base behind Lucy. The portal writes the file to S3
+**`healthcare-rag-pdfs`** and triggers a Bedrock ingestion job against
+KB **`GIHealthCareKB` (`ZTUA1DRKXT`)** so the new content is indexed
+and queryable on the next caller turn. This is the supported way to
+add or replace prep content without touching AWS directly. A few
+things to keep in mind:
+
+- **The same KB serves both languages.** `ZTUA1DRKXT` backs every
+  English and Spanish caller (cross-lingual retrieval relies on Titan
+  v2's multilingual embeddings — see [Language support](#language-support)
+  in `Lex/README.md`). An upload changes what Lucy can find for *both*
+  languages simultaneously, so review the document for both audiences.
+- **Sync is asynchronous.** Each upload kicks off a Bedrock ingestion
+  job (chunk → embed with Titan v2 → upsert into the vector index).
+  Until that job reaches `COMPLETE`, callers will not see the new
+  content. The portal should surface the job status (`STARTING`,
+  `IN_PROGRESS`, `COMPLETE`, `FAILED`) — never assume an upload is
+  live the moment the file is in S3.
+- **Every upload is patient-facing clinical content.** Anything in the
+  KB can become an answer that Lucy speaks to a real patient. Treat
+  every upload as a publication event: clinical review against UCSF
+  guidelines must complete *before* the file is uploaded, not after.
+  There is no editorial layer between the KB and the caller.
+- **No PHI in source documents.** The KB is an instruction-document
+  store, not a patient record store. Files must not contain caller
+  names, MRNs, DOBs, or any other PHI — anything ingested becomes
+  retrievable text and is sent to Bedrock as prompt context.
+- **Deletes and replacements need an explicit re-sync.** Removing a
+  file from S3 does **not** purge its embeddings until the next
+  ingestion job runs against that data source. Same for renames — the
+  old filename's chunks remain retrievable until they're explicitly
+  deleted and re-synced. The portal should expose a "remove +
+  reconcile" path, not just an upload path.
+- **Keep an upload audit trail in the portal.** The Bedrock KB itself
+  does not record who uploaded what. The portal should persist
+  uploader identity, filename, file hash, ingestion-job id, and
+  whether clinical review was signed off — both for HIPAA traceability
+  and to investigate "why did Lucy say *that* on yesterday's call?"
+
+If a portal upload appears to have made it to S3 but never goes live
+for callers, check the Bedrock console → Knowledge bases →
+`GIHealthCareKB` → **Data source → Sync history** for a `FAILED` job
+and inspect the failure reason (most common: unsupported file type,
+empty/scanned PDF, IAM permission gap on the KB role).
+
 ---
 
 ## Error handling & debugging
