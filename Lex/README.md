@@ -508,6 +508,32 @@ UCSF-AWS-ContactCenter/
 
 ---
 
+## Redeploying after a code change
+
+v1 is deployed as a Python zip on Lambda
+**`GIHealthcareLexFulfillment`** (python 3.13). It is intentionally
+frozen as the rollback target for v3, so this path is for emergency
+patches only — for normal feature work, change v3 in `../AgenticRAG/`
+instead.
+
+```powershell
+cd f:\UCSF-AWS-ContactCenter\Lex
+Compress-Archive -Path lambda_handler.py -DestinationPath lambda_handler.zip -Force
+aws lambda update-function-code `
+  --function-name GIHealthcareLexFulfillment `
+  --zip-file fileb://lambda_handler.zip
+aws lambda wait function-updated-v2 --function-name GIHealthcareLexFulfillment
+```
+
+If the change touches runtime, architecture, memory, handler, env
+vars, or IAM, run `update-function-configuration` /
+`put-role-policy` first and wait for `LastUpdateStatus == Successful`
+before calling `update-function-code`. After deploy, re-run
+`AgenticRAG/ROLLBACK.ps1` only if you also want to flip the live Lex
+alias from v3 back to this patched v1.
+
+---
+
 ## Known limitations
 
 | Limitation | Reason | Mitigation |
